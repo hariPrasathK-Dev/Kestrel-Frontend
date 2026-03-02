@@ -2,7 +2,7 @@
 
 **Biodiversity Monitoring & Ecological Reporting Platform**
 
-Next.js web application for KESTREL, providing a complete interface for biodiversity reporting, geospatial mapping, analytics dashboards, community forums, and admin management.
+Next.js web application for KESTREL — complete interface for biodiversity reporting, geospatial mapping with heatmaps, analytics dashboards, document management with approval workflow, community forums, and role-based admin management.
 
 ---
 
@@ -12,11 +12,10 @@ Next.js web application for KESTREL, providing a complete interface for biodiver
 |---|---|
 | Framework | Next.js 16 (App Router) |
 | Language | TypeScript 5 |
-| Styling | Tailwind CSS + Custom Design System |
+| Styling | Vanilla CSS + Custom Design System |
 | HTTP Client | Axios (with JWT interceptors) |
-| Maps | Leaflet + react-leaflet |
+| Maps | Leaflet + leaflet.heat (heatmap layer) |
 | Charts | Chart.js + react-chartjs-2 |
-| Forms | React Hook Form |
 | Notifications | react-toastify |
 | Auth State | React Context API |
 
@@ -27,20 +26,22 @@ Next.js web application for KESTREL, providing a complete interface for biodiver
 ```
 src/
 ├── app/                          # Next.js App Router pages
-│   ├── layout.tsx                # Root layout (Inter font, AuthProvider, ToastContainer)
+│   ├── layout.tsx                # Root layout (font, AuthProvider, ToastContainer)
 │   ├── page.tsx                  # Root redirect → /login or /dashboard
 │   ├── login/page.tsx
 │   ├── register/page.tsx
 │   ├── forgot-password/page.tsx
 │   ├── reset-password/page.tsx   # Token-based, reads ?token= from URL
-│   ├── dashboard/page.tsx        # Overview: stats, map, charts, alerts
-│   ├── report/page.tsx           # 3-tab reporting: Field Survey, Community, Bulk CSV
-│   ├── analytics/page.tsx        # Charts: species, trends, conservation, regions
-│   ├── admin/page.tsx            # 4-tab admin panel
+│   ├── dashboard/page.tsx        # Stats, map (markers/heatmap toggle), charts, animal-wise table
+│   ├── documents/page.tsx        # Document library — role-filtered upload & download
+│   ├── officer/page.tsx          # Officer panel — upload docs, CSV, view submissions
+│   ├── report/page.tsx           # Field Survey, Community Report, Bulk CSV upload
+│   ├── analytics/page.tsx        # Charts + animal-wise sortable observation table
+│   ├── admin/page.tsx            # 5-tab admin: reports, users, role requests, species, documents
 │   ├── forum/page.tsx            # Community forum with posts & comments
-│   └── profile/page.tsx         # Edit profile, avatar, researcher upgrade
+│   └── profile/page.tsx         # Edit profile, avatar, role upgrade request
 ├── components/
-│   ├── Sidebar.tsx               # Role-filtered navigation + contribution score
+│   ├── Sidebar.tsx               # Role-filtered navigation (user/officer/admin)
 │   ├── ProtectedRoute.tsx        # Auth guard + role guard with loading state
 │   ├── Modal.tsx                 # Portal modal (ESC + backdrop dismiss)
 │   ├── MapPicker.tsx             # Leaflet click-to-place marker (SSR-safe)
@@ -54,7 +55,7 @@ src/
 │   ├── api.ts                    # Axios instance with JWT injection + 401 redirect
 │   └── auth.ts                   # SSR-safe localStorage token helpers
 └── types/
-    └── index.ts                  # Full TypeScript interfaces for all entities
+    └── index.ts                  # Full TypeScript interfaces (User, Species, Document, etc.)
 ```
 
 ---
@@ -108,38 +109,51 @@ npx tsc --noEmit
 | `/register` | Public | Account creation with organisation field |
 | `/forgot-password` | Public | Email reset request |
 | `/reset-password` | Public | Token-based new password form |
-| `/dashboard` | ✅ Auth | Stat cards, observation map, charts, active alerts, recent reports |
-| `/report` | ✅ Auth | Field Survey (map picker + image), Community Report, Bulk CSV upload |
-| `/analytics` | ✅ Auth | Species distribution, monthly trends, conservation breakdown, region summary |
-| `/admin` | ✅ Admin | Report review, user management, role requests, species CRUD |
-| `/forum` | ✅ Auth | Community posts with categories, comments, and upvoting |
-| `/profile` | ✅ Auth | Edit profile, avatar upload, researcher role request, account stats |
+| `/dashboard` | ✅ All | Stat cards, map (markers/heatmap), charts, alerts, animal-wise table |
+| `/documents` | ✅ All | Approved docs for users; officers see own uploads + can upload |
+| `/officer` | ✅ Officer+ | Upload documents, bulk CSV, view my submissions |
+| `/report` | ✅ All | Field Survey (map picker + image), Community Report, Bulk CSV |
+| `/analytics` | ✅ All | Species distribution, trends, conservation, regions, animal-wise table |
+| `/admin` | ✅ Admin | Reports, users, role requests, species CRUD, document approval |
+| `/forum` | ✅ All | Community posts with categories, comments, upvoting |
+| `/profile` | ✅ All | Edit profile, avatar upload, officer role request, account stats |
+
+---
+
+## Role-Based Access
+
+| Feature | User | Officer | Admin |
+|---------|:----:|:-------:|:-----:|
+| View approved documents | ✅ | ✅ | ✅ |
+| Upload documents / CSV | ❌ | ✅ | ✅ |
+| Submit field reports | ✅ | ✅ | ✅ |
+| View Officer Panel (`/officer`) | ❌ | ✅ | ✅ |
+| Approve / reject documents | ❌ | ❌ | ✅ |
+| Approve / reject reports | ❌ | ❌ | ✅ |
+| Manage users & roles | ❌ | ❌ | ✅ |
+| Access Admin Panel (`/admin`) | ❌ | ❌ | ✅ |
 
 ---
 
 ## Key Components
 
 ### `Sidebar`
-Role-aware navigation. Admin-only links (`/admin`) are hidden for `user` and `researcher` roles. Displays the user's contribution score and a sign-out button.
+Role-aware navigation. Shows **Documents** and **Submit Report** for all roles. Shows **Officer Panel** for officer and admin. Shows **Admin Panel** for admin only. Displays the user's role badge, contribution score, and a sign-out button.
 
 ### `ProtectedRoute`
-Wraps any page that requires authentication. Redirects unauthenticated users to `/login`. Accepts an optional `requiredRole` prop to restrict access to `admin` or `researcher`. Shows a loading spinner while the auth state hydrates.
+Wraps pages that require authentication. Redirects unauthenticated users to `/login`. Accepts an optional `requiredRole` prop (`"admin"` or `"officer"`) to restrict access. Redirects unauthorized roles to `/dashboard`.
 
 ```tsx
-<ProtectedRoute requiredRole="admin">
-  <AdminPanel />
+<ProtectedRoute requiredRole="officer">
+  <OfficerPanel />
 </ProtectedRoute>
 ```
 
 ### `MapPicker`
 SSR-safe Leaflet map. Click anywhere to drop a pin. Emits `(lat, lng)` via `onLocationSelect` callback. Uses CartoDB light tile layer.
 
-```tsx
-<MapPicker onLocationSelect={(lat, lng) => console.log(lat, lng)} />
-```
-
 ### `ChartWidget`
-Thin wrapper around Chart.js. Supports `bar`, `line`, and `doughnut` chart types. Uses the platform's earth-tone colour palette automatically.
+Thin wrapper around Chart.js. Supports `bar`, `line`, and `doughnut` chart types with the platform's earth-tone colour palette.
 
 ```tsx
 <ChartWidget
@@ -152,38 +166,50 @@ Thin wrapper around Chart.js. Supports `bar`, `line`, and `doughnut` chart types
 ### `DataTable`
 Generic fully-typed table. Accepts a `columns` array with optional `render` callbacks for custom cell content.
 
-```tsx
-<DataTable
-  data={reports}
-  columns={[
-    { key: "speciesName", label: "Species" },
-    { key: "status", label: "Status", render: (r) => <Badge>{r.status}</Badge> },
-  ]}
-/>
-```
-
-### `Modal`
-Portal-based modal with ESC key dismiss and backdrop click to close. Supports `sm`, `md` (default), and `lg` sizes.
-
 ---
 
 ## Dashboard Overview
 
-The `/dashboard` page fetches and displays:
+The `/dashboard` fetches and displays:
 
 - **4 stat cards** — Total reports, Approved, Pending, Species tracked
-- **Monthly trend line chart** — Approved vs. Pending submissions across the year
-- **Top reported species bar chart** — Top 15 species by report count
-- **Observation map** — All approved reports rendered as colour-coded circle markers by risk level (green → low, orange → high, red → critical)
+- **Monthly trend chart** — Approved vs. Total submissions
+- **Top reported species chart** — Top 8 species by report count
+- **Observation map** with toggle:
+  - **📍 Markers mode** — colour-coded circle markers by risk level
+  - **🔥 Heatmap mode** — heat intensity overlay (green=Low → red=Critical) using `leaflet.heat`
 - **Active alerts panel** — Info / Warning / Critical styled alert banners
+- **🐾 Animal-Wise Observation Table** — sortable table of all species with report count, relative share bar, and activity status
 - **Recent reports table** — Last 5 submissions with status badges
+
+---
+
+## Animal-Wise Data Table
+
+Appears on both **Dashboard** (compact) and **Analytics** page (full featured):
+
+- Sortable by **Species Name** or **Sightings** count (click column headers)
+- Visual relative share progress bar per species
+- Top 3 rows highlighted with 🥇🥈🥉 medals
+- Activity status label: **High Activity** / **Moderate** / **Low Activity**
+
+---
+
+## Document Upload Workflow
+
+1. **Officer** uploads a file via `/officer` (Upload Document tab) or `/documents`
+2. Document is saved with `status: "pending"`
+3. **Admin** sees pending documents in Admin Panel → Documents tab
+4. Admin clicks **Approve** or **Reject** with an optional note
+5. Approved documents become visible to all users on `/documents`
+6. Users can **Download** any approved document
 
 ---
 
 ## Auth Flow
 
 1. `AuthProvider` checks `localStorage` for a saved JWT on mount
-2. If found, it calls `GET /api/auth/me` to verify the token and hydrate the user state
+2. If found, calls `GET /api/auth/me` to verify and hydrate user state
 3. On 401 responses, the Axios interceptor clears the token and redirects to `/login`
 4. All state is managed through `useAuth()` hook
 
@@ -195,7 +221,7 @@ const { user, login, logout, isLoading } = useAuth();
 
 ## Design System
 
-The platform uses a handcrafted CSS design system in `globals.css` — no Tailwind utility classes at the component level.
+Handcrafted CSS design system in `globals.css`.
 
 **Colour Palette**
 
@@ -205,24 +231,10 @@ The platform uses a handcrafted CSS design system in `globals.css` — no Tailwi
 | `--color-forest-light` | `#2d7a55` | Hover states, accents |
 | `--color-forest-pale` | `#d1eadc` | Highlighted backgrounds |
 | `--color-slate` | `#0f1e2d` | Sidebar background |
-| `--color-sand` | `#f0ebe3` | Warm neutral surface |
 | `--surface-bg` | `#f5f7f5` | Page background |
 | `--surface-card` | `#ffffff` | Card surface |
 
 **Component classes** — `.card`, `.btn`, `.form-input`, `.badge`, `.data-table`, `.modal-overlay`, `.stat-card`, `.nav-item`, `.auth-card`, `.tabs`, `.alert-banner`
-
----
-
-## Role-Based Access
-
-| Feature | User | Researcher | Admin |
-|---------|:----:|:----------:|:-----:|
-| View reports & analytics | ✅ | ✅ | ✅ |
-| Submit field reports | ✅ | ✅ | ✅ |
-| Create species entries | ❌ | ✅ | ✅ |
-| Access Admin Panel | ❌ | ❌ | ✅ |
-| Approve / reject reports | ❌ | ❌ | ✅ |
-| Manage users & roles | ❌ | ❌ | ✅ |
 
 ---
 
