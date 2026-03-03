@@ -68,12 +68,33 @@ const ExtraIcons = {
             <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6" /><line x1="8" y1="2" x2="8" y2="18" /><line x1="16" y1="6" x2="16" y2="22" />
         </svg>
     ),
+    region: (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
+            <circle cx="12" cy="9" r="2.5" />
+        </svg>
+    ),
+    alert: (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+        </svg>
+    ),
+    anomaly: (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+            <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
+        </svg>
+    ),
 };
 
 const NAV = [
     { href: "/dashboard", icon: Icons.dashboard, label: "Dashboard", roles: ["user", "officer", "admin"] },
     { href: "/documents", icon: ExtraIcons.document, label: "Documents", roles: ["user", "officer", "admin"] },
     { href: "/report", icon: Icons.report, label: "Submit Report", roles: ["user", "officer", "admin"] },
+    { href: "/regions", icon: ExtraIcons.region, label: "Regions", roles: ["officer", "admin"] },
+    { href: "/alerts", icon: ExtraIcons.alert, label: "Alerts", roles: ["user", "officer", "admin"] },
+    { href: "/anomalies", icon: ExtraIcons.anomaly, label: "Anomalies", roles: ["officer", "admin"] },
     { href: "/officer", icon: ExtraIcons.officer, label: "Officer Panel", roles: ["officer", "admin"] },
     { href: "/analytics", icon: Icons.analytics, label: "Analytics", roles: ["user", "officer", "admin"] },
     { href: "/forum", icon: Icons.forum, label: "Community", roles: ["user", "officer", "admin"] },
