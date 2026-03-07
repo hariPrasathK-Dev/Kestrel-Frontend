@@ -107,6 +107,12 @@ const ExtraIcons = {
             <path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
         </svg>
     ),
+    ai: (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z" />
+            <circle cx="9" cy="16" r="1" /><circle cx="15" cy="16" r="1" />
+        </svg>
+    ),
     settings: (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="3" />
@@ -126,6 +132,7 @@ const NAV = [
     { href: "/conservation", icon: ExtraIcons.conservation, label: "Conservation Zones", roles: ["officer", "admin"] },
     { href: "/documents", icon: ExtraIcons.document, label: "Documents", roles: ["user", "officer", "admin"] },
     { href: "/analytics", icon: Icons.analytics, label: "Analytics", roles: ["user", "officer", "admin"] },
+    { href: "/ai", icon: ExtraIcons.ai, label: "🤖 AI Assistant", roles: ["user", "officer", "admin"] },
     { href: "/forum", icon: Icons.forum, label: "Community", roles: ["user", "officer", "admin"] },
     { href: "/notifications", icon: ExtraIcons.notification, label: "Notifications", roles: ["user", "officer", "admin"] },
     { href: "/users", icon: ExtraIcons.users, label: "User Directory", roles: ["officer", "admin"] },
