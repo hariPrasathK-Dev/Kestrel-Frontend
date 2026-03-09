@@ -26,6 +26,10 @@ const HeatmapMap = dynamic(() => import("@/components/HeatmapMap"), {
     ),
 });
 
+const TimelineSlider = dynamic(() => import("@/components/TimelineSlider"), { 
+    ssr: false
+});
+
 const RISK_LEVELS = ["Low", "Medium", "High", "Critical"];
 
 export default function HeatmapPage() {
@@ -36,6 +40,7 @@ export default function HeatmapPage() {
     const [species, setSpecies] = useState("");
     const [riskLevel, setRiskLevel] = useState("");
     const [currentZoom, setCurrentZoom] = useState(2); // Track map zoom
+    const [timelineEnabled, setTimelineEnabled] = useState(false); // Timeline mode
 
     const loadHeatmap = async (zoom?: number) => {
         setLoading(true);
@@ -81,6 +86,20 @@ export default function HeatmapPage() {
             loadHeatmap(zoom);
         }
     };
+
+    const handleTimelineChange = (start: string, end: string) => {
+        setStartDate(start);
+        setEndDate(end);
+        // Auto-reload when timeline changes
+        setTimeout(() => loadHeatmap(), 100);
+    };
+
+    const toggleTimeline = () => {
+        setTimelineEnabled(!timelineEnabled);
+        if (timelineEnabled) {
+            // Reset dates when disabling timeline
+            setStartDate("");
+            setEndDate("");
         }
     };
 
@@ -101,14 +120,41 @@ export default function HeatmapPage() {
                         <div style={{ position: "absolute", top: 20, left: 20, zIndex: 1000, background: "white", padding: 16, borderRadius: 8, boxShadow: "0 2px 8px rgba(0,0,0,0.15)", maxWidth: 300 }}>
                             <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>Filters</div>
                             
+                            {/* Timeline Toggle */}
+                            <div style={{ marginBottom: 12, padding: 10, background: timelineEnabled ? "#dbeafe" : "#f3f4f6", borderRadius: 6, border: timelineEnabled ? "2px solid #3b82f6" : "none" }}>
+                                <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13 }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={timelineEnabled}
+                                        onChange={toggleTimeline}
+                                        style={{ cursor: "pointer" }}
+                                    />
+                                    <span style={{ fontWeight: 600 }}>🎬 Timeline Animation</span>
+                                </label>
+                            </div>
+                            
                             <div className="form-group" style={{ marginBottom: 10 }}>
                                 <label className="form-label" style={{ fontSize: 12, marginBottom: 4 }}>Start Date</label>
-                                <input type="date" className="form-input" value={startDate} onChange={(e) => setStartDate(e.target.value)} style={{ fontSize: 12, padding: "6px 8px" }} />
+                                <input 
+                                    type="date" 
+                                    className="form-input" 
+                                    value={startDate} 
+                                    onChange={(e) => setStartDate(e.target.value)} 
+                                    disabled={timelineEnabled}
+                                    style={{ fontSize: 12, padding: "6px 8px", opacity: timelineEnabled ? 0.5 : 1, cursor: timelineEnabled ? "not-allowed" : "text" }} 
+                                />
                             </div>
 
                             <div className="form-group" style={{ marginBottom: 10 }}>
                                 <label className="form-label" style={{ fontSize: 12, marginBottom: 4 }}>End Date</label>
-                                <input type="date" className="form-input" value={endDate} onChange={(e) => setEndDate(e.target.value)} style={{ fontSize: 12, padding: "6px 8px" }} />
+                                <input 
+                                    type="date" 
+                                    className="form-input" 
+                                    value={endDate} 
+                                    onChange={(e) => setEndDate(e.target.value)} 
+                                    disabled={timelineEnabled}
+                                    style={{ fontSize: 12, padding: "6px 8px", opacity: timelineEnabled ? 0.5 : 1, cursor: timelineEnabled ? "not-allowed" : "text" }} 
+                                />
                             </div>
 
                             <div className="form-group" style={{ marginBottom: 10 }}>
@@ -149,6 +195,15 @@ export default function HeatmapPage() {
                         {/* Map Container */}
                         <div style={{ width: "100%", height: "100%" }}>
                             <HeatmapMap points={heatmapData.data} onZoomChange={handleZoomChange} />
+                            
+                            {/* Timeline Slider */}
+                            {timelineEnabled && (
+                                <TimelineSlider 
+                                    onTimeChange={handleTimelineChange}
+                                    minDate="2023-01-01"
+                                    maxDate={new Date().toISOString().split('T')[0]}
+                                />
+                            )}
                         </div>
                     </div>
                 </div>
